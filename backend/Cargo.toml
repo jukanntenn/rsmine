@@ -1,0 +1,67 @@
+[package]
+name = "rsmine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+
+[dependencies]
+# Web framework
+axum = { version = "0.8.8", features = ["macros", "multipart"] }
+tower = "0.5.3"
+tower-http = { version = "0.6.8", features = ["cors", "fs", "trace"] }
+tower-cookies = "0.11.0"
+
+# Async runtime
+tokio = { version = "1.50.0", features = ["full"] }
+
+# ORM
+sea-orm = { version = "2.0.0-rc.37", features = ["runtime-tokio-rustls", "sqlx-sqlite", "sqlx-postgres", "sqlx-mysql"] }
+sea-orm-migration = "2.0.0-rc.37"
+
+# Serialization
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+# Authentication
+argon2 = "0.5.3"
+jsonwebtoken = { version = "10.3.0", default-features = false, features = ["aws_lc_rs"] }
+uuid = { version = "1.22.0", features = ["v4", "serde"] }
+
+# Date/Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Validation
+validator = { version = "0.18", features = ["derive"] }
+
+# Logging
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+
+# Configuration
+dotenvy = "0.15.7"
+config = "0.15.22"
+
+# Error handling
+thiserror = "2.0.18"
+anyhow = "1"
+
+# API Documentation
+utoipa = "5.4.0"
+utoipa-swagger-ui = "9.0.2"
+
+# Async traits
+async-trait = "0.1"
+
+# Password hashing
+rand = "0.8"
+
+# File handling
+sha2 = "0.10"
+hex = "0.4"
+urlencoding = "2.1"
+
+[dev-dependencies]
+tokio-test = "0.4"
+reqwest = { version = "0.12", features = ["json"] }
+http-body-util = "0.1"
+tower-util = "0.3"
