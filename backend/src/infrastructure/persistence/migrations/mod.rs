@@ -18,6 +18,7 @@ mod m20240101_000015_create_attachments;
 mod m20240101_000016_create_journals;
 mod m20240101_000017_create_journal_details;
 mod m20240101_000100_seed_initial_data;
+mod m20240101_000101_seed_admin_user;
 
 pub struct Migrator;
 
@@ -43,6 +44,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20240101_000016_create_journals::Migration),
             Box::new(m20240101_000017_create_journal_details::Migration),
             Box::new(m20240101_000100_seed_initial_data::Migration),
+            Box::new(m20240101_000101_seed_admin_user::Migration),
         ]
     }
 }

@@ -427,7 +427,7 @@ async fn non_admin_cannot_delete_status() {
     let password_hash = "$argon2id$v=19$m=19456,t=2,p=1$0e7xorW/878dteNtdDEBxw$pvkgDu1C4/cHqz0VfN+w/FZqRu+rl0eDUGJqwS3DlaE";
     db.execute_unprepared(&format!(
         r#"
-        INSERT INTO users (login, hashed_password, firstname, lastname, admin, status, created_on, updated_on, mail_notification, salt, must_change_passwd, twofa_required)
+        INSERT OR IGNORE INTO users (login, hashed_password, firstname, lastname, admin, status, created_on, updated_on, mail_notification, salt, must_change_passwd, twofa_required)
         VALUES ('admin', '{}', 'Admin', 'User', 1, 1, datetime('now'), datetime('now'), 'all', '', 0, 0)
         "#,
         password_hash
@@ -438,7 +438,7 @@ async fn non_admin_cannot_delete_status() {
     // Insert email address for admin
     db.execute_unprepared(
         r#"
-        INSERT INTO email_addresses (user_id, address, is_default, notify, created_on, updated_on)
+        INSERT OR IGNORE INTO email_addresses (user_id, address, is_default, notify, created_on, updated_on)
         VALUES (1, 'admin@example.com', 1, 1, datetime('now'), datetime('now'))
         "#,
     )
@@ -448,7 +448,7 @@ async fn non_admin_cannot_delete_status() {
     // Create a non-admin user
     db.execute_unprepared(&format!(
         r#"
-        INSERT INTO users (login, hashed_password, firstname, lastname, admin, status, created_on, updated_on, mail_notification, salt, must_change_passwd, twofa_required)
+        INSERT OR IGNORE INTO users (login, hashed_password, firstname, lastname, admin, status, created_on, updated_on, mail_notification, salt, must_change_passwd, twofa_required)
         VALUES ('regularuser', '{}', 'Regular', 'User', 0, 1, datetime('now'), datetime('now'), 'all', '', 0, 0)
         "#,
         password_hash
@@ -459,7 +459,7 @@ async fn non_admin_cannot_delete_status() {
     // Insert email address for regular user
     db.execute_unprepared(
         r#"
-        INSERT INTO email_addresses (user_id, address, is_default, notify, created_on, updated_on)
+        INSERT OR IGNORE INTO email_addresses (user_id, address, is_default, notify, created_on, updated_on)
         VALUES (2, 'regular@example.com', 1, 1, datetime('now'), datetime('now'))
         "#,
     )

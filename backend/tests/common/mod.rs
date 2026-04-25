@@ -88,7 +88,7 @@ async fn seed_test_data(db: &DatabaseConnection) {
 
     let sql = format!(
         r#"
-        INSERT INTO users (login, hashed_password, firstname, lastname, admin, status, created_on, updated_on, mail_notification, salt, must_change_passwd, twofa_required)
+        INSERT OR IGNORE INTO users (login, hashed_password, firstname, lastname, admin, status, created_on, updated_on, mail_notification, salt, must_change_passwd, twofa_required)
         VALUES ('admin', '{}', 'Admin', 'User', 1, 1, datetime('now'), datetime('now'), 'all', '', 0, 0)
         "#,
         password_hash
@@ -101,7 +101,7 @@ async fn seed_test_data(db: &DatabaseConnection) {
     // Insert email address for admin
     db.execute_unprepared(
         r#"
-        INSERT INTO email_addresses (user_id, address, is_default, notify, created_on, updated_on)
+        INSERT OR IGNORE INTO email_addresses (user_id, address, is_default, notify, created_on, updated_on)
         VALUES (1, 'admin@example.com', 1, 1, datetime('now'), datetime('now'))
         "#,
     )

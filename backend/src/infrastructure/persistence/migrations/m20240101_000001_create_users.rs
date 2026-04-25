@@ -19,7 +19,7 @@ impl MigrationTrait for Migration {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Users::Login).string().not_null())
-                    .col(ColumnDef::new(Users::HashedPassword).string_len(40))
+                    .col(ColumnDef::new(Users::HashedPassword).string_len(255))
                     .col(ColumnDef::new(Users::Firstname).string_len(30).not_null())
                     .col(ColumnDef::new(Users::Lastname).string_len(255).not_null())
                     .col(

@@ -12,42 +12,42 @@ impl MigrationTrait for Migration {
         // Role builtin values: 0=custom, 1=non-member, 2=anonymous
         // issues_visibility: all, default, own
         db.execute_unprepared(
-            "INSERT INTO roles (name, position, builtin, issues_visibility, assignable, users_visibility, time_entries_visibility, all_roles_managed) VALUES 
-            ('Manager', 1, 0, 'all', 1, 'all', 'all', 1),
-            ('Developer', 2, 0, 'all', 1, 'members_of_visible_projects', 'all', 1),
-            ('Reporter', 3, 0, 'default', 1, 'members_of_visible_projects', 'all', 1),
-            ('Non-Member', 4, 1, 'default', 1, 'members_of_visible_projects', 'all', 1),
-            ('Anonymous', 5, 2, 'default', 0, '-', '-', 0)"
+            "INSERT INTO roles (name, position, builtin, issues_visibility, assignable, users_visibility, time_entries_visibility, all_roles_managed) VALUES
+            ('Manager', 1, 0, 'all', true, 'all', 'all', true),
+            ('Developer', 2, 0, 'all', true, 'members_of_visible_projects', 'all', true),
+            ('Reporter', 3, 0, 'default', true, 'members_of_visible_projects', 'all', true),
+            ('Non-Member', 4, 1, 'default', true, 'members_of_visible_projects', 'all', true),
+            ('Anonymous', 5, 2, 'default', false, '-', '-', false)"
         ).await?;
 
         // Insert trackers
         db.execute_unprepared(
-            "INSERT INTO trackers (name, position, is_in_roadmap, default_status_id) VALUES 
-            ('Bug', 1, 1, 1),
-            ('Feature', 2, 1, 1),
-            ('Support', 3, 0, 1)",
+            "INSERT INTO trackers (name, position, is_in_roadmap, default_status_id) VALUES
+            ('Bug', 1, true, 1),
+            ('Feature', 2, true, 1),
+            ('Support', 3, false, 1)",
         )
         .await?;
 
         // Insert issue statuses
         db.execute_unprepared(
-            "INSERT INTO issue_statuses (name, position, is_closed, is_default, default_done_ratio) VALUES 
-            ('New', 1, 0, 1, 0),
-            ('In Progress', 2, 0, 0, NULL),
-            ('Resolved', 3, 0, 0, 100),
-            ('Feedback', 4, 0, 0, NULL),
-            ('Closed', 5, 1, 0, 100),
-            ('Rejected', 6, 1, 0, 100)"
+            "INSERT INTO issue_statuses (name, position, is_closed, is_default, default_done_ratio) VALUES
+            ('New', 1, false, true, 0),
+            ('In Progress', 2, false, false, NULL),
+            ('Resolved', 3, false, false, 100),
+            ('Feedback', 4, false, false, NULL),
+            ('Closed', 5, true, false, 100),
+            ('Rejected', 6, true, false, 100)"
         ).await?;
 
         // Insert priorities (enumerations)
         db.execute_unprepared(
-            "INSERT INTO enumerations (name, position, is_default, type, active) VALUES 
-            ('Low', 1, 0, 'IssuePriority', 1),
-            ('Normal', 2, 1, 'IssuePriority', 1),
-            ('High', 3, 0, 'IssuePriority', 1),
-            ('Urgent', 4, 0, 'IssuePriority', 1),
-            ('Immediate', 5, 0, 'IssuePriority', 1)",
+            "INSERT INTO enumerations (name, position, is_default, type, active) VALUES
+            ('Low', 1, false, 'IssuePriority', true),
+            ('Normal', 2, true, 'IssuePriority', true),
+            ('High', 3, false, 'IssuePriority', true),
+            ('Urgent', 4, false, 'IssuePriority', true),
+            ('Immediate', 5, false, 'IssuePriority', true)",
         )
         .await?;
 
