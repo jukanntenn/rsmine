@@ -1,0 +1,10 @@
+-- RSMine Development Seed Data
+-- Run manually if needed: sqlite3 data/rsmine.db < seed.sql
+--
+-- Note: RSMine uses SeaORM migrations for automatic seeding.
+-- This file is for manual recovery only. Migrations create:
+--   - Default roles (Manager, Developer, Reporter, etc.)
+--   - Default trackers (Bug, Feature, Support)
+--   - Default issue statuses (New, In Progress, Resolved, etc.)
+--   - Default priorities (Low, Normal, High, Urgent, Immediate)
+--   - Admin user (login: admin, password: admin123)
