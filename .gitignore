@@ -66,3 +66,7 @@ data/
 playwright-report/
 test-results/
 .codex
+.playwright-cli/
+frontend.log
+frontend.pid
+

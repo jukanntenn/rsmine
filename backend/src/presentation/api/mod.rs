@@ -149,6 +149,7 @@ pub fn create_routes(db: DatabaseConnection, config: AppConfig) -> Router {
     let create_project_usecase = Arc::new(CreateProjectUseCase::new(
         project_repository.clone(),
         member_repository.clone(),
+        tracker_repository.clone(),
     ));
 
     let update_project_usecase = Arc::new(UpdateProjectUseCase::new(
@@ -624,11 +625,11 @@ pub fn create_routes(db: DatabaseConnection, config: AppConfig) -> Router {
     let protected_create_project_routes = Router::new()
         .route(
             "/api/v1/projects.json",
-            post(v1::create_project::<ProjectRepositoryImpl, MemberRepositoryImpl>),
+            post(v1::create_project::<ProjectRepositoryImpl, MemberRepositoryImpl, TrackerRepositoryImpl>),
         )
         .route(
             "/api/v1/projects",
-            post(v1::create_project::<ProjectRepositoryImpl, MemberRepositoryImpl>),
+            post(v1::create_project::<ProjectRepositoryImpl, MemberRepositoryImpl, TrackerRepositoryImpl>),
         )
         .route_layer(middleware::from_fn_with_state(
             state.clone(),

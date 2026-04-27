@@ -2,7 +2,7 @@ use crate::application::dto::CreateProjectDto;
 use crate::application::errors::ApplicationError;
 use crate::application::use_cases::ProjectDetail;
 use crate::domain::entities::{Project, PROJECT_STATUS_ACTIVE};
-use crate::domain::repositories::{MemberRepository, ProjectRepository};
+use crate::domain::repositories::{MemberRepository, ProjectRepository, TrackerRepository};
 use crate::presentation::middleware::CurrentUser;
 use chrono::Utc;
 use std::sync::Arc;
@@ -14,16 +14,18 @@ pub struct CreateProjectResponse {
 }
 
 /// Use case for creating a new project
-pub struct CreateProjectUseCase<P: ProjectRepository, M: MemberRepository> {
+pub struct CreateProjectUseCase<P: ProjectRepository, M: MemberRepository, T: TrackerRepository> {
     project_repo: Arc<P>,
     member_repo: Arc<M>,
+    tracker_repo: Arc<T>,
 }
 
-impl<P: ProjectRepository, M: MemberRepository> CreateProjectUseCase<P, M> {
-    pub fn new(project_repo: Arc<P>, member_repo: Arc<M>) -> Self {
+impl<P: ProjectRepository, M: MemberRepository, T: TrackerRepository> CreateProjectUseCase<P, M, T> {
+    pub fn new(project_repo: Arc<P>, member_repo: Arc<M>, tracker_repo: Arc<T>) -> Self {
         Self {
             project_repo,
             member_repo,
+            tracker_repo,
         }
     }
 
@@ -137,14 +139,23 @@ impl<P: ProjectRepository, M: MemberRepository> CreateProjectUseCase<P, M> {
             .await
             .map_err(|e| ApplicationError::Internal(e.to_string()))?;
 
-        // 8. Add trackers if specified
-        if let Some(tracker_ids) = dto.tracker_ids {
-            for tracker_id in tracker_ids {
-                self.project_repo
-                    .add_tracker(created_project.id, tracker_id)
+        // 8. Add trackers - use specified trackers or default to all available
+        let tracker_ids = match dto.tracker_ids {
+            Some(ids) => ids,
+            None => {
+                let all_trackers = self
+                    .tracker_repo
+                    .find_all()
                     .await
                     .map_err(|e| ApplicationError::Internal(e.to_string()))?;
+                all_trackers.iter().map(|t| t.id).collect()
             }
+        };
+        for tracker_id in tracker_ids {
+            self.project_repo
+                .add_tracker(created_project.id, tracker_id)
+                .await
+                .map_err(|e| ApplicationError::Internal(e.to_string()))?;
         }
 
         // 9. Inherit members if specified
@@ -185,7 +196,7 @@ impl<P: ProjectRepository, M: MemberRepository> CreateProjectUseCase<P, M> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::entities::Project;
+    use crate::domain::entities::{Project, Tracker};
     use crate::domain::repositories::RepositoryError;
 
     // Mock implementations for testing
@@ -309,6 +320,60 @@ mod tests {
         }
     }
 
+    struct MockTrackerRepository {
+        trackers: Vec<Tracker>,
+    }
+
+    #[async_trait::async_trait]
+    impl TrackerRepository for MockTrackerRepository {
+        async fn find_all(&self) -> Result<Vec<Tracker>, RepositoryError> {
+            Ok(self.trackers.clone())
+        }
+
+        async fn find_by_id(&self, id: i32) -> Result<Option<Tracker>, RepositoryError> {
+            Ok(self.trackers.iter().find(|t| t.id == id).cloned())
+        }
+
+        async fn find_by_project(&self, _project_id: i32) -> Result<Vec<Tracker>, RepositoryError> {
+            Ok(self.trackers.clone())
+        }
+
+        async fn create(
+            &self,
+            _tracker: &crate::domain::repositories::NewTracker,
+        ) -> Result<Tracker, RepositoryError> {
+            unimplemented!()
+        }
+
+        async fn update(&self, _tracker: &Tracker) -> Result<Tracker, RepositoryError> {
+            unimplemented!()
+        }
+
+        async fn delete(&self, _id: i32) -> Result<(), RepositoryError> {
+            unimplemented!()
+        }
+
+        async fn exists_by_name(&self, _name: &str) -> Result<bool, RepositoryError> {
+            Ok(false)
+        }
+
+        async fn exists_by_name_excluding(
+            &self,
+            _name: &str,
+            _exclude_id: i32,
+        ) -> Result<bool, RepositoryError> {
+            Ok(false)
+        }
+
+        async fn set_projects(
+            &self,
+            _tracker_id: i32,
+            _project_ids: &[i32],
+        ) -> Result<(), RepositoryError> {
+            Ok(())
+        }
+    }
+
     struct MockMemberRepository;
 
     #[async_trait::async_trait]
@@ -421,7 +486,7 @@ mod tests {
         });
         let member_repo = Arc::new(MockMemberRepository);
 
-        let usecase = CreateProjectUseCase::new(project_repo, member_repo);
+        let usecase = CreateProjectUseCase::new(project_repo, member_repo, Arc::new(MockTrackerRepository { trackers: vec![] }));
         let current_user = CurrentUser {
             id: 1,
             login: "admin".to_string(),
@@ -453,7 +518,7 @@ mod tests {
         });
         let member_repo = Arc::new(MockMemberRepository);
 
-        let usecase = CreateProjectUseCase::new(project_repo, member_repo);
+        let usecase = CreateProjectUseCase::new(project_repo, member_repo, Arc::new(MockTrackerRepository { trackers: vec![] }));
         let current_user = CurrentUser {
             id: 1,
             login: "user".to_string(),
@@ -488,7 +553,7 @@ mod tests {
         });
         let member_repo = Arc::new(MockMemberRepository);
 
-        let usecase = CreateProjectUseCase::new(project_repo, member_repo);
+        let usecase = CreateProjectUseCase::new(project_repo, member_repo, Arc::new(MockTrackerRepository { trackers: vec![] }));
         let current_user = CurrentUser {
             id: 1,
             login: "admin".to_string(),
@@ -523,7 +588,7 @@ mod tests {
         });
         let member_repo = Arc::new(MockMemberRepository);
 
-        let usecase = CreateProjectUseCase::new(project_repo, member_repo);
+        let usecase = CreateProjectUseCase::new(project_repo, member_repo, Arc::new(MockTrackerRepository { trackers: vec![] }));
         let current_user = CurrentUser {
             id: 1,
             login: "admin".to_string(),
@@ -559,7 +624,7 @@ mod tests {
         });
         let member_repo = Arc::new(MockMemberRepository);
 
-        let usecase = CreateProjectUseCase::new(project_repo, member_repo);
+        let usecase = CreateProjectUseCase::new(project_repo, member_repo, Arc::new(MockTrackerRepository { trackers: vec![] }));
         let current_user = CurrentUser {
             id: 1,
             login: "admin".to_string(),
@@ -587,21 +652,21 @@ mod tests {
 
     #[tokio::test]
     async fn test_calculate_nested_set_position_first_project() {
-        let (lft, rgt) = CreateProjectUseCase::<MockProjectRepository, MockMemberRepository>::calculate_nested_set_position(None, None);
+        let (lft, rgt) = CreateProjectUseCase::<MockProjectRepository, MockMemberRepository, MockTrackerRepository>::calculate_nested_set_position(None, None);
         assert_eq!(lft, 1);
         assert_eq!(rgt, 2);
     }
 
     #[tokio::test]
     async fn test_calculate_nested_set_position_after_existing() {
-        let (lft, rgt) = CreateProjectUseCase::<MockProjectRepository, MockMemberRepository>::calculate_nested_set_position(None, Some(4));
+        let (lft, rgt) = CreateProjectUseCase::<MockProjectRepository, MockMemberRepository, MockTrackerRepository>::calculate_nested_set_position(None, Some(4));
         assert_eq!(lft, 6);
         assert_eq!(rgt, 7);
     }
 
     #[tokio::test]
     async fn test_calculate_nested_set_position_as_child() {
-        let (lft, rgt) = CreateProjectUseCase::<MockProjectRepository, MockMemberRepository>::calculate_nested_set_position(Some(5), Some(10));
+        let (lft, rgt) = CreateProjectUseCase::<MockProjectRepository, MockMemberRepository, MockTrackerRepository>::calculate_nested_set_position(Some(5), Some(10));
         assert_eq!(lft, 5);
         assert_eq!(rgt, 6);
     }

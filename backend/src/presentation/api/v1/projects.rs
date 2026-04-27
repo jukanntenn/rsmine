@@ -78,8 +78,8 @@ pub async fn get_project<P: ProjectRepository, M: MemberRepository, U: UserRepos
 
 /// Create project endpoint handler
 /// POST /api/v1/projects.json
-pub async fn create_project<P: ProjectRepository, M: MemberRepository>(
-    State(usecase): State<Arc<CreateProjectUseCase<P, M>>>,
+pub async fn create_project<P: ProjectRepository, M: MemberRepository, T: TrackerRepository>(
+    State(usecase): State<Arc<CreateProjectUseCase<P, M, T>>>,
     Extension(current_user): Extension<CurrentUser>,
     Json(req): Json<CreateProjectRequest>,
 ) -> Result<(StatusCode, Json<CreateProjectJsonResponse>), HttpError> {
