@@ -4,12 +4,16 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct AppConfig {
+    #[serde(default)]
+    pub debug: bool,
     pub server: ServerConfig,
     pub database: DatabaseConfig,
     pub jwt: JwtConfig,
     pub storage: StorageConfig,
     pub logging: LoggingConfig,
     pub password: PasswordConfig,
+    #[serde(default)]
+    pub cors: CorsConfig,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -55,6 +59,12 @@ pub struct PasswordConfig {
     pub max_age: u32,
 }
 
+#[derive(Debug, Deserialize, Clone, Default)]
+pub struct CorsConfig {
+    #[serde(default = "default_cors_origins")]
+    pub allow_origins: Vec<String>,
+}
+
 fn default_host() -> String {
     "0.0.0.0".to_string()
 }
@@ -81,6 +91,9 @@ fn default_log_format() -> String {
 }
 fn default_password_min_length() -> usize {
     8
+}
+fn default_cors_origins() -> Vec<String> {
+    vec!["*".to_string()]
 }
 
 impl AppConfig {

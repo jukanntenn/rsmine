@@ -1,0 +1,52 @@
+services:
+  rsmine-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    container_name: rsmine-api
+    environment:
+      - RSMINE__SERVER__HOST=0.0.0.0
+      - RSMINE__SERVER__PORT=3001
+      - RSMINE__DEBUG=true
+      - RSMINE__DATABASE__URL=postgres://rsmine:rsmine@rsmine-db:5432/rsmine
+      - RSMINE__JWT__SECRET=dev-secret-key-change-in-production
+      - RSMINE__CORS__ALLOW_ORIGINS=["*"]
+    ports:
+      - "3001:3001"
+    depends_on:
+      rsmine-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sf http://127.0.0.1:3001/ready || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "com.docker.compose.project=rsmine"
+
+  rsmine-db:
+    image: postgres:16-alpine
+    container_name: rsmine-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=rsmine
+      - POSTGRES_USER=rsmine
+      - POSTGRES_PASSWORD=rsmine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rsmine"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "com.docker.compose.project=rsmine"
+
+volumes:
+  pgdata:

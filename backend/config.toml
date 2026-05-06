@@ -1,3 +1,5 @@
+debug = true
+
 [server]
 host = "0.0.0.0"
 port = 3001
@@ -8,7 +10,6 @@ url = "sqlite://data/rsmine.db?mode=rwc"
 max_connections = 10
 
 [jwt]
-secret = "your-secret-key-here-change-in-production"
 expiration = 86400
 
 [storage]
@@ -21,3 +22,6 @@ format = "json"
 
 [password]
 min_length = 8
+
+[cors]
+allow_origins = ["*"]

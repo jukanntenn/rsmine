@@ -48,7 +48,7 @@ anyhow = "1"
 
 # API Documentation
 utoipa = "5.4.0"
-utoipa-swagger-ui = "9.0.2"
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 
 # Async traits
 async-trait = "0.1"

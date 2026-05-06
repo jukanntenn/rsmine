@@ -1,12 +1,13 @@
 ---
 # Usage:
-# ANSIBLE_STDOUT_CALLBACK=yaml ansible-playbook -i devops/ansible/hosts.yml devops/ansible/main.yml --vault-password-file ~/.ansible-vault/rsmine.pwd
+# ansible-playbook -i devops/ansible/hosts.yml devops/ansible/dev.yml --vault-password-file ~/.ansible-vault/rsmine.pwd
 
-- name: Deploy rsmine
-  hosts: rsmine
+- name: Deploy rsmine (dev)
+  hosts: oect
+  user: "{{ user }}"
   gather_facts: no
   vars_files:
-    - vars/vault_main.yml
+    - vars/dev/vault.yml
 
   vars:
     app_name: rsmine
@@ -14,8 +15,10 @@
     app_path: "{{ apps_path }}/{{ app_name }}"
     compose_file: "{{ app_path }}/docker-compose.yml"
     config_file: "{{ app_path }}/config.toml"
-    data_path: "{{ app_path }}/data"
-    registry: "192.168.5.50:5000"
+
+    image_tag: "dev"
+    postgres_db: rsmine
+    postgres_user: rsmine
 
   tasks:
     - name: Ensure paths
@@ -25,19 +28,16 @@
       loop:
         - "{{ apps_path }}"
         - "{{ app_path }}"
-        - "{{ data_path }}"
-        - "{{ data_path }}/postgres"
-        - "{{ data_path }}/files"
 
     - name: Copy docker-compose.yml
       ansible.builtin.template:
-        src: docker-compose.yml.j2
+        src: dev/docker-compose.yml.j2
         dest: "{{ compose_file }}"
         mode: "0644"
 
     - name: Copy config.toml
       ansible.builtin.template:
-        src: config.toml.j2
+        src: dev/config.toml.j2
         dest: "{{ config_file }}"
         mode: "0600"
 

@@ -1,0 +1,55 @@
+services:
+  rsmine-web:
+    image: 192.168.5.50:5000/rsmine-web:{{ image_tag }}
+    container_name: {{ app_name }}-web
+    ports:
+      - "3512:3000"
+    environment:
+      - BACKEND_URL=http://rsmine-api:3001
+    depends_on:
+      rsmine-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: always
+
+  rsmine-api:
+    image: 192.168.5.50:5000/rsmine-api:{{ image_tag }}
+    container_name: {{ app_name }}-api
+    volumes:
+      - {{ config_file }}:/app/config.toml:ro
+    depends_on:
+      rsmine-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:3001/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: always
+
+  rsmine-db:
+    image: postgres:16-alpine
+    container_name: {{ app_name }}-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB={{ postgres_db }}
+      - POSTGRES_USER={{ postgres_user }}
+      - POSTGRES_PASSWORD={{ postgres_password }}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ postgres_user }}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+volumes:
+  pgdata:

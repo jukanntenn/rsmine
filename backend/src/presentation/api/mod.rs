@@ -35,6 +35,24 @@ use axum::{
 };
 use sea_orm::DatabaseConnection;
 use std::sync::Arc;
+use tower_http::cors::{Any, CorsLayer};
+use utoipa::OpenApi;
+
+#[derive(OpenApi)]
+#[openapi()]
+struct ApiDoc;
+
+fn build_cors_layer(origins: &[String]) -> CorsLayer {
+    if origins.iter().any(|o| o == "*") {
+        CorsLayer::permissive()
+    } else {
+        let parsed: Vec<_> = origins.iter().filter_map(|o| o.parse().ok()).collect();
+        CorsLayer::new()
+            .allow_origin(parsed)
+            .allow_methods(Any)
+            .allow_headers(Any)
+    }
+}
 
 /// Application state for routes
 #[derive(Clone)]
@@ -62,6 +80,9 @@ pub struct AppState {
 }
 
 pub fn create_routes(db: DatabaseConnection, config: AppConfig) -> Router {
+    let debug = config.debug;
+    let cors_origins = config.cors.allow_origins.clone();
+
     // Create services
     let jwt_service = Arc::new(JwtService::new(
         config.jwt.secret.clone(),
@@ -1488,7 +1509,7 @@ pub fn create_routes(db: DatabaseConnection, config: AppConfig) -> Router {
         ))
         .with_state(get_project_trackers_usecase);
 
-    Router::new()
+    let router = Router::new()
         .merge(routes::health_routes())
         .merge(public_auth_routes)
         .merge(protected_current_user_routes)
@@ -1547,5 +1568,16 @@ pub fn create_routes(db: DatabaseConnection, config: AppConfig) -> Router {
         .merge(protected_update_category_routes)
         .merge(protected_delete_category_routes)
         .merge(protected_get_project_trackers_routes)
-        .with_state(state)
+        .with_state(state);
+
+    let router = if debug {
+        router.merge(
+            utoipa_swagger_ui::SwaggerUi::new("/swagger-ui")
+                .url("/api-docs/openapi.json", ApiDoc::openapi()),
+        )
+    } else {
+        router
+    };
+
+    router.layer(build_cors_layer(&cors_origins))
 }
